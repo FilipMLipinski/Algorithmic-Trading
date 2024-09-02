@@ -4,6 +4,7 @@ class Action(Enum):
     BUY = 1
     SELL = 2
     NO_ACTION = 3
+    SELL_ALL = 4
 
 class Event(Enum):
     UP_OVERSHOOT = 1
@@ -13,10 +14,10 @@ class Event(Enum):
     NO_EVENT = 5
 
 class Model():
-    def __init__(self, delta=0.01, short=False):
+    def __init__(self, delta=0.00001, short=False):
         self.extreme = 0
         self.reference = 0
-        self.isUp = True
+        self.isUp = False
         self.delta = delta
         self.short = short
         self.recentEvent = Event.NO_EVENT
@@ -72,3 +73,13 @@ class Model():
             else:
                 self.recentEvent = Event.NO_EVENT
                 return Action.BUY
+            
+class Log():
+    def __init__(self, timestamp : str):
+        self.timestamp = timestamp
+        self.file = open("logs/log_" + timestamp + ".csv", 'w')
+    
+    def recordEvent(self, ask : int, bid : int, action : Action) -> None:
+        line = f"{ask},{bid},{action.value}\n"
+        self.file.write(line)
+    
