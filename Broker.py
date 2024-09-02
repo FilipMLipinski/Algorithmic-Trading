@@ -1,11 +1,13 @@
 from Model import Action
 import requests
+import json
 
 class Broker():
     def __init__(self, key_id, secret_key, url = "https://paper-api.alpaca.markets/v2/orders", \
                  asset="BTC/USD", notional=10):
         self.key_id = key_id
         self.secret_key = secret_key
+        self.pos_url = "https://paper-api.alpaca.markets/v2/positions"
         self.url = url
         self.asset = asset
         self.notional = notional # dollar amount to trade
@@ -27,7 +29,7 @@ class Broker():
             "type": "market",
             "time_in_force": "gtc",
             "symbol": asset,
-            "notional": notional          
+            "notional": notional   
         }
     def performAction(self, action : Action):
         if(action == Action.BUY):
@@ -37,5 +39,11 @@ class Broker():
             response = requests.post(self.url, json=self.sell_payload, headers=self.headers)
             return response
         elif(action == Action.SELL_ALL):
-            response = requests.delete(self.url, headers=self.headers)
+            requests.delete(self.url, headers=self.headers)
+            response = requests.get(self.pos_url, headers=self.headers)
+            qty = response.json()[0]["qty"]
+            sell_payload = dict(self.sell_payload)
+            del sell_payload["notional"]
+            sell_payload["qty"] = qty
+            response = requests.post(self.url, json=sell_payload,headers=self.headers)
             return response
